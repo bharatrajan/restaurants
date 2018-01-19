@@ -29,9 +29,22 @@
   color: #FF0000;
 }
 
-.results-wrapper{
-
+/*Restaurent List*/
+.restaurent-list{
+  padding: 0px !important;
+  text-align: left;
 }
+.restaurent-location-title{
+  font-size: 20px;
+}
+.restaurant-name{
+  font-size: 15px;
+}
+.restaurant-cuisines{
+  font-size: 12px;
+}
+
+
 
 @keyframes App-logo-spin {
   from { transform: rotate(0deg); }

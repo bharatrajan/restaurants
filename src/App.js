@@ -4,6 +4,8 @@ import './App.css';
 import { locationProvider } from './geoLocation';
 import _ from 'lodash';
 import { zipVaildator } from './utils';
+import RestaurentsList from './RestaurentsList';
+
 import zipcodes from 'zipcodes';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import serializeForm from 'form-serialize';
@@ -19,31 +21,31 @@ class App extends Component {
       isZipValid: true
   };
 
-  componentDidMount() {
-      locationProvider.getCurrentPosition(this.geoLocationSuccessHandler, this.geoLocationErrorHandler);
-  }
-
   geoLocationSuccessHandler = position => {
-      this.setState({
-          coords: position.coords
-      });
+    this.setState({
+        coords: position.coords
+    });
   }
 
-  geoLocationErrorHandler = err => {
-    console.log("Geo Location Error : ",err)
+  componentDidMount() {
+      locationProvider.getCurrentPosition(this.geoLocationSuccessHandler);
   }
 
   _submitForm = event => {
+      //Prevent form default submit action
       event.preventDefault();
       event.stopPropagation();
+
+      //Serialize and extract form data as object
       const formData = serializeForm(this.formEl, {
           hash: true
       });
-      console.log("formData : ", formData);
 
+      //ZipCode validation & zip -> long. lat. conversion
       const isZipValid = zipVaildator(formData.zip);
       let position = zipcodes.lookup(formData.zip);
 
+      //Updating state based on validation results
       if (isZipValid && position && position.latitude && position.longitude) {
           this.setState({
               isZipValid,
@@ -75,9 +77,10 @@ class App extends Component {
         <header className="App-header">
           <h1 className="App-title">Restaurant Finder</h1>
         </header>
-
-        <div className="form-wrapper">
-          <form className="" onSubmit={this._submitForm}  ref={(formEl) =>
+        <div className="container">
+      
+        <div className="form-wrapper row">
+          <form className="col-sm-12" onSubmit={this._submitForm}  ref={(formEl) =>
             { this.formEl = formEl; }}>
               <div className="form-group zipcode-box-wrapper">
                 <input 
@@ -95,15 +98,29 @@ class App extends Component {
             </form>
         </div>
 
-        <div className="results-wrapper">
-          latitude <br/>
-          {coords.latitude}<br/>
-          <br/>
-          longitude  <br/>
-          {coords.longitude}<br/>
-        </div>
+        {(coords.latitude && coords.longitude) && 
+            <div className="results-wrapper row">
+              <div className="col-sm-4">
+                <RestaurentsList
+                  latitude={coords.latitude.toString()} 
+                  longitude={coords.longitude.toString()}
+                ></RestaurentsList>
+              </div>
 
-      </div>
+              <div className="col-sm-8">
+                latitude <br/>
+                {coords.latitude}<br/>
+                <br/>
+                longitude  <br/>
+                {coords.longitude}<br/>
+              </div>              
+            </div>
+
+          }
+
+
+        </div>
+    </div>
     );
   }
 }
