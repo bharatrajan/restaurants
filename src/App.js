@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
-import { locationProvider } from './geoLocation';
-import { zipVaildator } from './utils';
+import { zipVaildator, locationProvider} from './utils';
 import MapDisplay from './MapDisplay';
 import RestaurentsList from './RestaurentsList';
 import SearchHistory from './SearchHistory';
@@ -25,19 +24,38 @@ class App extends Component {
       }
   };
 
-  geoLocationSuccessHandler = position => {
+  /**
+  * @description - Called when browser get the current lat. long. of the user
+  * @description - Updates state
+  * @callBack
+  * @param {object} position - contains current location information
+  * @param {boolean} arg2 - yay or nay
+  * @returns null
+  */  
+  geoLocationSuccessHandler = location => {
     this.setState({
         restaurentListColomnSize: "col-sm-4",
-        usersCurrentCoords: position.coords,
-        searchableAreaCoords: position.coords,
+        usersCurrentCoords: location.coords,
+        searchableAreaCoords: location.coords,
         isUsersCurrentCoordsAvailable: true
     });
   }
 
+  /**
+  * @description - Gets geoLocation is user dint block it
+  * @lifeCycle
+  * @returns null
+  */
   componentDidMount() {
       locationProvider.getCurrentPosition(this.geoLocationSuccessHandler);
   }
 
+  /**
+  * @description - Extract zipCode from form & calls processZip()
+  * @eventListener
+  * @param {object} event - From submit evnet
+  * @returns null
+  */  
   _submitForm = event => {
       //Prevent form default submit action
       event.preventDefault();
@@ -47,10 +65,16 @@ class App extends Component {
       const formData = serializeForm(this.formEl, {
           hash: true
       });
-      this.handleZip(formData.zip)
+      this.processZip(formData.zip)
   }
   
-  handleZip = zip => {
+  /**
+  * @description - Validates zip then gets long. lat. for zip 
+  * @description - Updating state based on validation results
+  * @param {string} zip - zip entered by user from form
+  * @returns null
+  */  
+  processZip = zip => {
       //ZipCode validation & zip -> long. lat. conversion
       const isZipValid = zipVaildator(zip);
       let position = zipcodes.lookup(zip);
@@ -72,12 +96,24 @@ class App extends Component {
       }
   }
 
+  /**
+  * @description - Called when user selects a restaurent from list
+  * @description - Updates the state
+  * @callBack
+  * @param {object} selectedRestaurentLocation - location of selected restaurent
+  * @returns null
+  */
   handleRestaurentOnSelect = selectedRestaurentLocation => {
     this.setState({
       selectedRestaurentLocation
     })
   }
 
+  /**
+  * @description:View template renderer
+  * @param: None
+  * @returns: None
+  */  
   render() {
 
       const {
@@ -93,21 +129,23 @@ class App extends Component {
 
     return (
       <div className="App">
+        {/*Header*/}
         <header className="App-header">
           <h1 className="App-title">Restaurant Finder</h1>
         </header>
         <div className="container">
       
+       {/*Search history : Display the history of zip user searched before*/} 
        <div className="row">
           <SearchHistory 
             zip={zip}
-            onClickHandler={this.handleZip}
+            onClickHandler={this.processZip}
           ></SearchHistory>       
        </div>       
 
-
+        {/*Form that taked zip from user*/}
         <div className="form-wrapper row">
-          <form className="col-sm-12" onSubmit={this._submitForm}  ref={(formEl) =>
+          <form className="" onSubmit={this._submitForm}  ref={(formEl) =>
             { this.formEl = formEl; }}>
               <div className="form-group zipcode-box-wrapper">
                 <input 
@@ -125,8 +163,11 @@ class App extends Component {
             </form>
         </div>
 
+        {/*Results for reataurent search*/}
         <div className="results-wrapper row">
         
+          {/*Displays restaurent list for given search-location
+            *Displays only if search-location is provided*/}  
           {(searchableAreaCoords.latitude && searchableAreaCoords.longitude) && 
             <div className={restaurentListColomnSize}>
               <RestaurentsList
@@ -138,6 +179,7 @@ class App extends Component {
             </div>
           }
 
+          {/*Displays Map if Geo location is ON*/}            
           {(usersCurrentCoords.latitude && usersCurrentCoords.longitude) &&           
             <div className="col-sm-8">
                 <MapDisplay ref={googleMaps => this.googleMaps=googleMaps}

@@ -1,3 +1,4 @@
+//Data needed for making Zomato-API call
 const zomatoApiMeta = {
   url: 'https://developers.zomato.com/',
   path: 'api/v2.1/geocode',
@@ -9,6 +10,14 @@ const zomatoApiMeta = {
   },
 };
 
+/**
+  * @description - Get call to get list of restaurents 
+  * @param {string} longitude - longitude of searchable area
+  * @param {string} latitude - latitude of searchable area
+  * @param {callback function} successHandler - Succes callback
+  * @param {callback function} errorHandler - Error callback
+  * @returns null
+  */
 export const getRestaurentsList = (
   longitude,
   latitude,

@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { getRestaurentsList } from '../api';
 import PropsTypes from 'prop-types';
-import './RestaurentsList.css';
 import _ from 'lodash';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -12,10 +11,22 @@ class RestaurentsList extends Component {
     latitude: PropsTypes.string.isRequired,
   };
 
+  /**
+  * @description - If new is different from old props, makes API call
+  * @lifeCycle
+  * @param {object} nextProps - new props object
+  * @returns null
+  */
   componentWillReceiveProps(nextProps) {
     if (!_.isEqual(this.props, nextProps))
       this.callAPIAndUpdateState(nextProps.longitude, nextProps.latitude);
   }
+
+  /**
+  * @description - Makes API call
+  * @lifeCycle
+  * @returns null
+  */
 
   componentDidMount() {
     const { longitude, latitude } = this.props;
@@ -24,20 +35,40 @@ class RestaurentsList extends Component {
 
   state = {};
 
+  /**
+  * @description - Handle Zamoto API response
+  * @description - Updates state with API response
+  * @description - Makes first item default selected
+  * @description - Pass on selected location to parent
+  * @callBack
+  * @param {object} resp - response from API
+  * @returns null
+  */
+
   successHandler = resp => {
     let selectedRestaurant = null;
 
+    //Makes first item default selected
     if (resp.nearby_restaurants[0])
       selectedRestaurant = resp.nearby_restaurants[0].restaurant;
 
+    //Update state
     this.setState({
       selectedRestaurant,
       location: resp.location,
       restaurants: resp.nearby_restaurants,
     });
 
+    //Pass on selected location to parent
     this.props.handleRestaurentOnSelect(selectedRestaurant.location);
   };
+
+  /**
+  * @description - Maked API call
+  * @param {string} longitude - longitude of the searchable area
+  * @param {string} latitude - latitude of the searchable area
+  * @returns null
+  */
 
   callAPIAndUpdateState = (longitude, latitude) => {
     if (longitude && latitude) {
@@ -50,7 +81,13 @@ class RestaurentsList extends Component {
     }
   };
 
-  getClassName = (restaurant, index) => {
+  /**
+  * @description - Simple utilty to selected item style
+  * @param {object} restaurant - User selected restaurant
+  * @returns {string} className 
+  */
+
+  getClassName = restaurant => {
     if (
       this.props.isUserCoordsAvailable &&
       _.isEqual(this.state.selectedRestaurant, restaurant)
@@ -61,12 +98,26 @@ class RestaurentsList extends Component {
     }
   };
 
+  /**
+  * @description - Called when user selects a restaurent
+  * @description - Updates state and propogate location of selected restaurant to parent 
+  * @eventListener
+  * @param {object} selectedRestaurant - User selected restaurant
+  * @returns null
+  */
+
   handleRestaurentOnClick = selectedRestaurant => {
     if (!_.isEqual(this.state.selectedRestaurant, selectedRestaurant)) {
       this.setState({ selectedRestaurant });
       this.props.handleRestaurentOnSelect(selectedRestaurant.location);
     }
   };
+
+  /**
+  * @description:View template renderer
+  * @param: None
+  * @returns: None
+  */
 
   render() {
     const { location, restaurants } = this.state;
@@ -88,7 +139,7 @@ class RestaurentsList extends Component {
             {restaurants.map((item, index) =>
               <li
                 key={index}
-                className={this.getClassName(item.restaurant, index)}
+                className={this.getClassName(item.restaurant)}
                 onClick={() => this.handleRestaurentOnClick(item.restaurant)}
               >
                 <div className="restaurant-name">
