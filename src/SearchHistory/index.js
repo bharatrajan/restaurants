@@ -63,7 +63,7 @@ class MapDisplay extends Component {
       return(
 
         <div className="btn-group btn-group-justified search-history">
-            <a href="#" className="btn btn-primary">History</a>
+            <a href="#" className="btn history btn-primary">History</a>
             
             {this.state.zipList.map((zip, index) => {
                 if(zip)
