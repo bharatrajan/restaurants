@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
 import { locationProvider } from './geoLocation';
-import _ from 'lodash';
 import { zipVaildator } from './utils';
+import MapDisplay from './MapDisplay';
 import RestaurentsList from './RestaurentsList';
-
+import SearchHistory from './SearchHistory';
 import zipcodes from 'zipcodes';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import serializeForm from 'form-serialize';
@@ -17,13 +16,24 @@ class App extends Component {
   }
 
   state = {
-      coords: {},
-      isZipValid: true
+      zip:"",
+      usersCurrentCoords: {},
+      restaurentListColomnSize : "col-sm-12",
+      isUsersCurrentCoordsAvailable: false,
+      isZipValid: true,
+      searchableAreaCoords: {},
+      selectedRestaurentLocation: {
+        latitude: "NOT_AVAILABLE",
+        longitude: "NOT_AVAILABLE"
+      }
   };
 
   geoLocationSuccessHandler = position => {
     this.setState({
-        coords: position.coords
+        restaurentListColomnSize: "col-sm-4",
+        usersCurrentCoords: position.coords,
+        searchableAreaCoords: position.coords,
+        isUsersCurrentCoordsAvailable: true
     });
   }
 
@@ -40,16 +50,20 @@ class App extends Component {
       const formData = serializeForm(this.formEl, {
           hash: true
       });
-
+      this.handleZip(formData.zip)
+  }
+  
+  handleZip = zip => {
       //ZipCode validation & zip -> long. lat. conversion
-      const isZipValid = zipVaildator(formData.zip);
-      let position = zipcodes.lookup(formData.zip);
+      const isZipValid = zipVaildator(zip);
+      let position = zipcodes.lookup(zip);
 
       //Updating state based on validation results
       if (isZipValid && position && position.latitude && position.longitude) {
           this.setState({
+              zip,
               isZipValid,
-              coords: {
+              searchableAreaCoords : {
                   latitude: position.latitude,
                   longitude: position.longitude
               }
@@ -61,15 +75,23 @@ class App extends Component {
       }
   }
 
+  handleRestaurentOnSelect = selectedRestaurentLocation => {
+    this.setState({
+      selectedRestaurentLocation
+    })
+  }
+
   render() {
 
       const {
+          zip,
           isZipValid,
-          coords
+          usersCurrentCoords,
+          searchableAreaCoords,
+          restaurentListColomnSize,
+          selectedRestaurentLocation,
+          isUsersCurrentCoordsAvailable
       } = this.state;
-
-      console.log('coords : ', coords);
-      console.log('isZipValid : ', isZipValid);
 
 
     return (
@@ -79,6 +101,14 @@ class App extends Component {
         </header>
         <div className="container">
       
+       <div className="row">
+          <SearchHistory 
+            zip={zip}
+            onClickHandler={this.handleZip}
+          ></SearchHistory>       
+       </div>       
+
+
         <div className="form-wrapper row">
           <form className="col-sm-12" onSubmit={this._submitForm}  ref={(formEl) =>
             { this.formEl = formEl; }}>
@@ -98,28 +128,31 @@ class App extends Component {
             </form>
         </div>
 
-        {(coords.latitude && coords.longitude) && 
-            <div className="results-wrapper row">
-              <div className="col-sm-4">
-                <RestaurentsList
-                  latitude={coords.latitude.toString()} 
-                  longitude={coords.longitude.toString()}
-                ></RestaurentsList>
-              </div>
-
-              <div className="col-sm-8">
-                latitude <br/>
-                {coords.latitude}<br/>
-                <br/>
-                longitude  <br/>
-                {coords.longitude}<br/>
-              </div>              
+        <div className="results-wrapper row">
+        
+          {(searchableAreaCoords.latitude && searchableAreaCoords.longitude) && 
+            <div className={restaurentListColomnSize}>
+              <RestaurentsList
+                isUserCoordsAvailable={isUsersCurrentCoordsAvailable}
+                latitude={searchableAreaCoords.latitude.toString()} 
+                longitude={searchableAreaCoords.longitude.toString()}
+                handleRestaurentOnSelect={this.handleRestaurentOnSelect}
+              ></RestaurentsList>
             </div>
-
           }
 
-
+          {(usersCurrentCoords.latitude && usersCurrentCoords.longitude) &&           
+            <div className="col-sm-8">
+                <MapDisplay ref={googleMaps => this.googleMaps=googleMaps}
+                  currentlongitude={usersCurrentCoords.longitude.toString()}
+                  currentlatitude={usersCurrentCoords.latitude.toString()}
+                  restaurentlongitude={selectedRestaurentLocation.longitude}
+                  restaurentlatitude={selectedRestaurentLocation.latitude}                  
+                ></MapDisplay>
+            </div>              
+          }      
         </div>
+      </div>
     </div>
     );
   }
