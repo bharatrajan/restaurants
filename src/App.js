@@ -11,9 +11,6 @@ import serializeForm from 'form-serialize';
 
 
 class App extends Component {
-  constructor(props) {
-      super(props);
-  }
 
   state = {
       zip:"",
